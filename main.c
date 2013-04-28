@@ -180,10 +180,10 @@ void affichage(Mode mode, Bool debut, Fragment* fragments, SDL_Surface* ecran) {
 
 
 void eventDessin(SDL_Event ev, Fragment** fragments, Bool * debut, Couleur couleur, int w, int h) {
-
-
+    int n=1;
     Fragment* neuf = NULL;
     Point* neufchaine = NULL;
+    Point* nvp=NULL;
     if (ev.type == SDL_MOUSEBUTTONDOWN) {
         if (ev.button.button == SDL_BUTTON_LEFT) {
             if (*debut==Vrai) {
@@ -234,7 +234,7 @@ void eventDessin(SDL_Event ev, Fragment** fragments, Bool * debut, Couleur coule
                 neuf = neuf->next;
 
 
-
+    nvp = neuf->chaine;
     cairo_surface_t *surfaceFond;
 
     neuf->spt = SDL_CreateRGBSurface(SDL_HWSURFACE, w, h, 32, 0, 0, 0, 0);
@@ -245,7 +245,17 @@ void eventDessin(SDL_Event ev, Fragment** fragments, Bool * debut, Couleur coule
                                                       neuf->spt->h,
                                                       neuf->spt->pitch);
     cairo_t *droite = cairo_create(surfaceFond);
-    cairo_line_to(droite, 200, 200);
+    cairo_move_to(droite, nvp->x, nvp->y);
+    if (neuf->lench >= 4)
+    cairo_curve_to(droite, nvp->next->x, nvp->next->y, nvp->next->next->next->x, nvp->next->next->next->y, nvp->next->next->x, nvp->next->next->y);
+    nvp = nvp->next;
+        while (neuf->lench>=4+3*n) {
+            n++;
+            nvp = nvp->next->next->next;
+            cairo_curve_to(droite, nvp->x, nvp->y, nvp->next->next->x, nvp->next->next->y, nvp->next->x, nvp->next->y);
+        }
+
+
     cairo_stroke(droite);
 
 
