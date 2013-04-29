@@ -107,7 +107,7 @@ void affichage(Mode mode, Bool debut, Fragment* fragments, SDL_Surface* ecran) {
     SDL_GetMouseState(&x, &y);
     cairo_surface_t *surfaceFond;
     SDL_Surface *surfLigne=NULL;
-    surfLigne = SDL_CreateRGBSurface(SDL_HWSURFACE, ecran->w, ecran->h, 32, 0, 0, 0, 0);
+    surfLigne = SDL_CreateRGBSurface(SDL_HWSURFACE, ecran->w, ecran->h, 32, 0, 0, 0, 255);
     SDL_FillRect(surfLigne, NULL, 0xFFFFFFFF);
     surfaceFond = cairo_image_surface_create_for_data (surfLigne->pixels,
                                                       CAIRO_FORMAT_ARGB32,
@@ -239,6 +239,8 @@ void eventDessin(SDL_Event ev, Fragment** fragments, Bool * debut, Couleur coule
 
     neuf->spt = SDL_CreateRGBSurface(SDL_HWSURFACE, w, h, 32, 0, 0, 0, 0);
     SDL_FillRect(neuf->spt, NULL, 0xFFFFFFFF);
+    SDL_SetAlpha(neuf->spt, SDL_SRCALPHA, 128);
+
     surfaceFond = cairo_image_surface_create_for_data (neuf->spt->pixels,
                                                       CAIRO_FORMAT_ARGB32,
                                                       neuf->spt->w,
