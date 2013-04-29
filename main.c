@@ -5,6 +5,7 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
+int EPAISSEUR_TRAIT;
 
 typedef enum {Noir, Rouge} Couleur;
 typedef enum {Selection, Edition, Dessin} Mode;
@@ -26,7 +27,8 @@ typedef struct fragment{
 
 
 void eventDessin(SDL_Event ev, Fragment** , Bool * debut, Couleur couleur, int w, int h);
-void affichage(Mode, Bool, Fragment*, SDL_Surface*);
+void affichage(Mode, Bool, Fragment*, SDL_Surface*, Couleur couleur);
+void couleurevent(SDL_Event ev, Couleur *couleur, Mode mode, Bool debut, Fragment* fragments);
 
 
 int main(int argc, char *argv[]){
@@ -47,6 +49,8 @@ int main(int argc, char *argv[]){
     }
     SDL_WM_SetCaption("Editeur de terrain", NULL);
     police = TTF_OpenFont("VirtualVectorVortex.ttf", 85);
+    EPAISSEUR_TRAIT = 7*ecran->h/768;
+
 
     cairo_surface_t *surfaceFond;
     SDL_Surface *surfLigne=NULL;
@@ -83,14 +87,15 @@ int main(int argc, char *argv[]){
             /*if (mode==Selection)
                 eventSelection(ev);
             if (mode==Edition)
-                eventEdition(ev);
+                eventEdition(ev);*/
+            couleurevent(ev, &couleur, mode, debut, fragments);/*
             changermode();
             deplacerterrain();*/
             if (ev.type==SDL_KEYDOWN)
                 if (ev.key.keysym.sym==SDLK_ESCAPE)
                     continuer=Faux;
         }
-		affichage(mode, debut, fragments, ecran);
+		affichage(mode, debut, fragments, ecran, couleur);
     }
 
 
@@ -102,7 +107,23 @@ int main(int argc, char *argv[]){
     return EXIT_SUCCESS;
 }
 
-void affichage(Mode mode, Bool debut, Fragment* fragments, SDL_Surface* ecran) {
+void couleurevent(SDL_Event ev, Couleur *couleur, Mode mode, Bool debut, Fragment* fragments) {
+    Fragment* neuf = NULL;
+    if (ev.type==SDL_KEYDOWN) {
+        if (ev.key.keysym.sym==SDLK_r)
+            *couleur = Rouge;
+        if (ev.key.keysym.sym==SDLK_n)
+            *couleur = Noir;
+    }
+    if (mode==Dessin && debut==Faux) {
+        neuf = fragments;
+        while(neuf->next!=NULL)
+            neuf = neuf->next;
+        neuf->couleur = *couleur;
+    }
+}
+
+void affichage(Mode mode, Bool debut, Fragment* fragments, SDL_Surface* ecran, Couleur couleur) {
     int n=1, x, y;
     SDL_GetMouseState(&x, &y);
     cairo_surface_t *surfaceFond;
@@ -115,7 +136,7 @@ void affichage(Mode mode, Bool debut, Fragment* fragments, SDL_Surface* ecran) {
                                                       surfLigne->h,
                                                       surfLigne->pitch);
     cairo_t *droite = cairo_create(surfaceFond);
-
+    cairo_set_line_width(droite, EPAISSEUR_TRAIT);
 
 
 
@@ -140,6 +161,8 @@ void affichage(Mode mode, Bool debut, Fragment* fragments, SDL_Surface* ecran) {
             while (neuf->next != NULL)
                 neuf = neuf->next;
             //On est maintenant au dernier fragment. On va le dessiner.
+            if (neuf->couleur==Rouge)
+                cairo_set_source_rgba (droite, 255, 0, 0, 1);
             nvp = neuf->chaine;
 
             cairo_move_to(droite, nvp->x, nvp->y);
@@ -239,7 +262,8 @@ void eventDessin(SDL_Event ev, Fragment** fragments, Bool * debut, Couleur coule
 
     neuf->spt = SDL_CreateRGBSurface(SDL_HWSURFACE, w, h, 32, 0, 0, 0, 0);
     SDL_FillRect(neuf->spt, NULL, 0xFFFFFFFF);
-    SDL_SetAlpha(neuf->spt, SDL_SRCALPHA, 128);
+    SDL_SetAlpha(neuf->spt, SDL_SRCALPHA, 100);
+    SDL_SetColorKey(neuf->spt, SDL_SRCCOLORKEY, SDL_MapRGB(neuf->spt->format, 255, 255, 255));
 
     surfaceFond = cairo_image_surface_create_for_data (neuf->spt->pixels,
                                                       CAIRO_FORMAT_ARGB32,
@@ -247,6 +271,10 @@ void eventDessin(SDL_Event ev, Fragment** fragments, Bool * debut, Couleur coule
                                                       neuf->spt->h,
                                                       neuf->spt->pitch);
     cairo_t *droite = cairo_create(surfaceFond);
+    cairo_set_source_rgba (droite, 0, 0, 0, 1);
+    cairo_set_line_width(droite, EPAISSEUR_TRAIT);
+    if (neuf->couleur==Rouge)
+        cairo_set_source_rgba (droite, 255, 0, 0, 1);
     cairo_move_to(droite, nvp->x, nvp->y);
     if (neuf->lench >= 4)
     cairo_curve_to(droite, nvp->next->x, nvp->next->y, nvp->next->next->next->x, nvp->next->next->next->y, nvp->next->next->x, nvp->next->next->y);
