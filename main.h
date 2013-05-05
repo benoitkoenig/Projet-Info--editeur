@@ -24,5 +24,6 @@ typedef struct fragment{
 
 void eventDessin(SDL_Event ev, Fragment** , Bool * debut, Couleur couleur, int w, int h, int posecran);
 void couleurevent(SDL_Event ev, Couleur *couleur, Mode mode, Bool debut, Fragment* fragments);
-void ecranevent(SDL_Event ev, int *posecran, SDL_Rect *positionecran);
+void ecranevent(SDL_Event ev, int *posecran, SDL_Rect* tailleecran);
 void changermode(SDL_Event ev, Mode *mode, Bool *debut);
+Bool finevent(SDL_Event ev);

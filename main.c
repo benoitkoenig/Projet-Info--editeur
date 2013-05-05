@@ -42,11 +42,12 @@ int main(int argc, char *argv[]){
     SDL_WM_SetCaption("Editeur de terrain", NULL);
     police = TTF_OpenFont("VirtualVectorVortex.ttf", 85);
     EPAISSEUR_TRAIT = 7*ecran->h/768;
-    W_SUR_H = 2;
+    W_SUR_H = 10;
 
     Mode mode = Dessin;
     Bool continuer = Vrai;
     SDL_Event ev;
+    SDL_EnableKeyRepeat(200, 100);
     Couleur couleur = Noir;
     Fragment* fragments = NULL;
     int posecran = 0;
@@ -59,8 +60,11 @@ int main(int argc, char *argv[]){
     tailleecran.y = 0;
     tailleecran.h = ecran->h;
     tailleecran.w = ecran->w;
-    cairo_t *droite = NULL;
     positionecran.y = 0;
+    positionecran.x = 0;
+    positionecran.h = ecran->h;
+    positionecran.w = ecran->w;
+    cairo_t *droite = NULL;
 
     surfLigne = SDL_CreateRGBSurface(SDL_HWSURFACE, W_SUR_H * ecran->h, ecran->h, 32, 0, 0, 0, 255);
     surfaceFond = cairo_image_surface_create_for_data (surfLigne->pixels,
@@ -84,6 +88,7 @@ int main(int argc, char *argv[]){
 	//Point* edit = NULL;
 
     //racourcis clavier : n:noir, r:rouge, s:Selection, e:Edition, d:Dessin
+    affichage(mode, debut, fragments, ecran, posecran, surfaceFond, surfLigne, positionecran, droite, tailleecran);
     while (continuer==Vrai) {
         while (SDL_PollEvent(&ev)==1) {
             if (mode==Dessin)
@@ -93,13 +98,11 @@ int main(int argc, char *argv[]){
             if (mode==Edition)
                 eventEdition(ev);*/
             couleurevent(ev, &couleur, mode, debut, fragments);
-            ecranevent(ev, &posecran, &positionecran);
+            ecranevent(ev, &posecran, &tailleecran);
             changermode(ev, &mode, &debut);
-            if (ev.type==SDL_KEYDOWN)
-                if (ev.key.keysym.sym==SDLK_ESCAPE)
-                    continuer=Faux;
+            continuer = finevent(ev);
         }
-		affichage(mode, debut, fragments, ecran, posecran, surfaceFond, surfLigne, positionecran, droite, tailleecran);
+        affichage(mode, debut, fragments, ecran, posecran, surfaceFond, surfLigne, positionecran, droite, tailleecran);
 		usleep(20000);
     }
 
@@ -124,15 +127,23 @@ void changermode(SDL_Event ev, Mode *mode, Bool *debut) {
     }
 }
 
+Bool finevent(SDL_Event ev) {
+    if (ev.type==SDL_KEYDOWN)
+        if (ev.key.keysym.sym==SDLK_ESCAPE)
+            return Faux;
+    if (ev.type==SDL_QUIT)
+        return Faux;
+    return Vrai;
+}
 
-void ecranevent(SDL_Event ev, int *posecran, SDL_Rect* positionecran) {
+void ecranevent(SDL_Event ev, int *posecran, SDL_Rect* tailleecran) {
     if (ev.type==SDL_KEYDOWN) {
         if (ev.key.keysym.sym == SDLK_RIGHT)
             (*posecran)+=20;
         if (ev.key.keysym.sym == SDLK_LEFT && (*posecran)>0)
             (*posecran)-=20;
     }
-    positionecran->x = -(*posecran);
+    tailleecran->x = (*posecran);
 }
 
 void couleurevent(SDL_Event ev, Couleur *couleur, Mode mode, Bool debut, Fragment* fragments) {

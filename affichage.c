@@ -23,7 +23,6 @@ void affichage(Mode mode, Bool debut, Fragment* fragments, SDL_Surface* ecran, i
     SDL_GetMouseState(&x, &y);
 
     Fragment* neuf = NULL;
-
     SDL_FillRect(surfLigne, &tailleecran, 0xFFFFFFFF);
     droite = cairo_create(surfaceFond);
     cairo_set_line_width(droite, EPAISSEUR_TRAIT);
@@ -56,7 +55,6 @@ void affichage(Mode mode, Bool debut, Fragment* fragments, SDL_Surface* ecran, i
         cairo_stroke(droite);
         neuf = neuf->next;
     }
-
 
 
     SDL_BlitSurface(surfLigne, &tailleecran, ecran, &positionecran);
