@@ -16,7 +16,6 @@ typedef struct point{
 typedef struct fragment{
     Couleur couleur;
     Point* chaine;
-    SDL_Surface* spt;
     int lench;
     struct fragment* next;
 } Fragment;
@@ -27,3 +26,4 @@ void couleurevent(SDL_Event ev, Couleur *couleur, Mode mode, Bool debut, Fragmen
 void ecranevent(SDL_Event ev, int *posecran, SDL_Rect* tailleecran);
 void changermode(SDL_Event ev, Mode *mode, Bool *debut);
 Bool finevent(SDL_Event ev);
+void saveevent(SDL_Event, Fragment* fragments);

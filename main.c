@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
     SDL_Surface *ecran = NULL;
     TTF_Font *police = NULL;
 
-    ecran = SDL_SetVideoMode(500, 500, 32, SDL_HWSURFACE | SDL_DOUBLEBUF/* | SDL_FULLSCREEN*/);
+    ecran = SDL_SetVideoMode(0, 0, 32, SDL_HWSURFACE | SDL_DOUBLEBUF/* | SDL_FULLSCREEN*/);
     if (ecran == NULL){  // Si l'ouverture a échoué, on le note et on arrête
         fprintf(stderr, "Impossible de charger le mode vidéo : %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]){
     Mode mode = Dessin;
     Bool continuer = Vrai;
     SDL_Event ev;
-    SDL_EnableKeyRepeat(200, 100);
+    SDL_EnableKeyRepeat(200, 20);
     Couleur couleur = Noir;
     Fragment* fragments = NULL;
     int posecran = 0;
@@ -77,8 +77,7 @@ int main(int argc, char *argv[]){
 
 	//Variables en mode Selection
 	//int selection = -1; //-1 = pas de selection
-	//Bool deplacer = Faux; //Vrai -> l'objet suit la sélection, ne redessine PAS l'objet avec Cairo.
-												//La position de l'objet est relative à sa position d'origine
+	//Bool deplacer = Faux; //Vrai -> l'objet suit la sélection
 
 	//Variables en mode Dessin
 	Bool debut = Vrai; //dès qu'on clique, on crée un nouvel objet.
@@ -101,6 +100,7 @@ int main(int argc, char *argv[]){
             ecranevent(ev, &posecran, &tailleecran);
             changermode(ev, &mode, &debut);
             continuer = finevent(ev);
+            saveevent(ev, fragments);
         }
         affichage(mode, debut, fragments, ecran, posecran, surfaceFond, surfLigne, positionecran, droite, tailleecran);
 		usleep(20000);
@@ -110,6 +110,33 @@ int main(int argc, char *argv[]){
     TTF_Quit();
     SDL_Quit();
     return EXIT_SUCCESS;
+}
+
+void saveevent(SDL_Event ev, Fragment* fragments) {
+    if (ev.type == SDL_KEYDOWN)
+        if (ev.key.keysym.sym==SDLK_w) {
+            FILE *fichier = fopen("./save.txt", "w");
+            int i;
+            Couleur cols[] = {Noir, Rouge};
+            for(i=0;i<2;i++) {
+                Fragment* neuf = fragments;
+                Point* pt = NULL;
+                fprintf(fichier, "-2 -2 ");
+                while (neuf!=NULL) {
+                    if (neuf->couleur==cols[i]) {
+                        pt = neuf->chaine;
+                        fprintf(fichier, "-1 -1 ");
+                        while (pt!=NULL) {
+                            fprintf(fichier, "%d %d ", pt->x, pt->y);
+                            pt = pt->next;
+                        }
+                    }
+                    neuf = neuf->next;
+                }
+            }
+            fprintf(fichier, "-3 -3");
+            fclose(fichier);
+        }
 }
 
 void changermode(SDL_Event ev, Mode *mode, Bool *debut) {
@@ -188,8 +215,8 @@ void eventDessin(SDL_Event ev, Fragment** fragments, Bool * debut, Couleur coule
                 neuf->chaine = malloc(sizeof(Point));
                 neuf->chaine->x = ev.button.x+posecran;
                 neuf->chaine->y = ev.button.y;
+                neuf->chaine->next = NULL;
                 neuf->lench = 1;
-                neuf->spt = NULL;
             }
             else {
                 neuf = (*fragments);
@@ -201,6 +228,7 @@ void eventDessin(SDL_Event ev, Fragment** fragments, Bool * debut, Couleur coule
                 neufchaine->next = malloc(sizeof(Point));
                 (neufchaine->next)->x = ev.button.x+posecran;
                 (neufchaine->next)->y = ev.button.y;
+                (neufchaine->next)->next = NULL;
                 (neuf->lench)++;
             }
         }
